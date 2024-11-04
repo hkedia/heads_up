@@ -86,6 +86,8 @@ defmodule HeadsUpWeb do
       # Core UI components and translation
       import HeadsUpWeb.CoreComponents
       import HeadsUpWeb.Gettext
+      # Custom components
+      import HeadsUpWeb.CustomComponents
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
