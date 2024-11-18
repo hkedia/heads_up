@@ -1,9 +1,16 @@
 defmodule HeadsUpWeb.IncidentLive.Index do
   use HeadsUpWeb, :live_view
+
   alias HeadsUp.Incidents
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, page_title: "Incidents", incidents: Incidents.list_incidents())}
+    socket =
+      socket
+      |> assign(:page_title, "Incidents")
+      |> stream(:incidents, Incidents.list_incidents())
+      |> assign(:form, to_form(%{}))
+
+    {:ok, socket}
   end
 
   def render(assigns) do
@@ -15,18 +22,39 @@ defmodule HeadsUpWeb.IncidentLive.Index do
           Thanks for pitching in. <%= vibe %>
         </:tagline>
       </.headline>
-      <div class="incidents">
-        <.incident_card :for={incident <- @incidents} incident={incident} />
+      <.filter_form form={@form} />
+      <div class="incidents" id="incidents" phx-update="stream">
+        <.incident_card
+          :for={{dom_id, incident} <- @streams.incidents}
+          incident={incident}
+          id={dom_id}
+        />
       </div>
     </div>
     """
   end
 
+  def filter_form(assigns) do
+    ~H"""
+    <.form for={@form} id="filter-form" phx-change="filter" phx-submit="filter">
+      <.input field={@form[:q]} placeholder="Search..." autocomplete="off" />
+      <.input
+        type="select"
+        field={@form[:status]}
+        prompt="Status"
+        options={[:pending, :resolved, :canceled]}
+      />
+      <.input type="select" field={@form[:sort_by]} prompt="Sort By" options={[:name, :priority]} />
+    </.form>
+    """
+  end
+
   attr :incident, HeadsUp.Incidents.Incident, required: true
+  attr :id, :string, required: true
 
   def incident_card(assigns) do
     ~H"""
-    <.link navigate={~p"/incidents/#{@incident}"}>
+    <.link navigate={~p"/incidents/#{@incident}"} id={@id}>
       <div class="card">
         <img src={@incident.image_path} />
         <h2><%= @incident.name %></h2>
@@ -39,5 +67,14 @@ defmodule HeadsUpWeb.IncidentLive.Index do
       </div>
     </.link>
     """
+  end
+
+  def handle_event("filter", params, socket) do
+    socket =
+      socket
+      |> assign(:form, to_form(params))
+      |> stream(:incidents, Incidents.filter_incidents(params), reset: true)
+
+    {:noreply, socket}
   end
 end
