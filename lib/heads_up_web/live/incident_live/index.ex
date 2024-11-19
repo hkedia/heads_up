@@ -24,6 +24,9 @@ defmodule HeadsUpWeb.IncidentLive.Index do
       </.headline>
       <.filter_form form={@form} />
       <div class="incidents" id="incidents" phx-update="stream">
+        <div id="empty" class="no-results only:block hidden">
+          No incidents found. Try changing your filters.
+        </div>
         <.incident_card
           :for={{dom_id, incident} <- @streams.incidents}
           incident={incident}
@@ -44,7 +47,16 @@ defmodule HeadsUpWeb.IncidentLive.Index do
         prompt="Status"
         options={[:pending, :resolved, :canceled]}
       />
-      <.input type="select" field={@form[:sort_by]} prompt="Sort By" options={[:name, :priority]} />
+      <.input
+        type="select"
+        field={@form[:sort_by]}
+        prompt="Sort By"
+        options={[
+          Name: "name",
+          "Priority: High to Low": "priority_asc",
+          "Priority: Low to High": "priority_desc"
+        ]}
+      />
     </.form>
     """
   end

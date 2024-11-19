@@ -17,5 +17,9 @@ defmodule HeadsUp.Incidents.Incident do
     incident
     |> cast(attrs, [:name, :description, :priority, :status, :image_path])
     |> validate_required([:name, :description, :priority, :status, :image_path])
+    |> validate_length(:name, min: 3, max: 100)
+    |> validate_length(:description, min: 10, max: 1000)
+    |> validate_inclusion(:priority, 1..5)
+    |> validate_inclusion(:status, [:pending, :resolved, :canceled])
   end
 end
